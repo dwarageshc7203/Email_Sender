@@ -35,9 +35,11 @@
     e.preventDefault();
 
     const data = {
-      to: form.to.value,
-      subject: form.subject.value,
-      body: form.body.value
+        id: Date.now().toString(),
+        email: form.to.value,
+        to: form.to.value,
+        subject: form.subject.value,
+        body: form.body.value
     };
 
     messageEl.textContent = 'Sending...';
