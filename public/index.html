@@ -43,7 +43,7 @@
     messageEl.textContent = 'Sending...';
 
     try {
-      const res = await fetch('/send-email', {  // adjust URL if your backend route differs
+      const res = await fetch('/send', {  // adjust URL if your backend route differs
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
