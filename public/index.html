@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Email Sender</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 40px; }
+  label, input, textarea, button { display: block; margin-bottom: 10px; width: 300px; }
+  button { width: 150px; }
+  .message { margin-top: 20px; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>Send Email</h1>
+<form id="emailForm">
+  <label for="to">To (email):</label>
+  <input id="to" type="email" required />
+
+  <label for="subject">Subject:</label>
+  <input id="subject" type="text" required />
+
+  <label for="body">Body:</label>
+  <textarea id="body" rows="6" required></textarea>
+
+  <button type="submit">Send</button>
+</form>
+<div class="message" id="message"></div>
+
+<script>
+  const form = document.getElementById('emailForm');
+  const messageEl = document.getElementById('message');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const data = {
+      to: form.to.value,
+      subject: form.subject.value,
+      body: form.body.value
+    };
+
+    messageEl.textContent = 'Sending...';
+
+    try {
+      const res = await fetch('/send-email', {  // adjust URL if your backend route differs
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!res.ok) throw new Error('Failed to send email');
+
+      const result = await res.json();
+      messageEl.textContent = result.message || 'Email sent successfully!';
+      form.reset();
+    } catch (err) {
+      messageEl.textContent = 'Error: ' + err.message;
+    }
+  });
+</script>
+</body>
+</html>
