@@ -1,65 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Email Sender</title>
-<style>
-  body { font-family: Arial, sans-serif; margin: 40px; }
-  label, input, textarea, button { display: block; margin-bottom: 10px; width: 300px; }
-  button { width: 150px; }
-  .message { margin-top: 20px; font-weight: bold; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Email Sender</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+      color: #333;
+    }
+    label {
+      font-weight: 600;
+      margin-top: 15px;
+      display: block;
+      color: #444;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+    button {
+      background: #007BFF;
+      color: white;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      margin-top: 20px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .message {
+      margin-top: 20px;
+      font-weight: bold;
+      text-align: center;
+      color: #006400;
+    }
+  </style>
 </head>
 <body>
-<h1>Send Email</h1>
-<form id="emailForm">
-  <label for="to">To (email):</label>
-  <input id="to" type="email" required />
+  <div class="container">
+    <h1>Send Email</h1>
+    <form id="emailForm">
+      <label for="to">To (comma-separated emails):</label>
+      <input id="to" type="text" required />
 
-  <label for="subject">Subject:</label>
-  <input id="subject" type="text" required />
+      <label for="subject">Subject:</label>
+      <input id="subject" type="text" required />
 
-  <label for="body">Body:</label>
-  <textarea id="body" rows="6" required></textarea>
+      <label for="body">Body:</label>
+      <textarea id="body" rows="6" required></textarea>
 
-  <button type="submit">Send</button>
-</form>
-<div class="message" id="message"></div>
+      <button type="submit">Send</button>
+    </form>
+    <div class="message" id="message"></div>
+  </div>
 
-<script>
-  const form = document.getElementById('emailForm');
-  const messageEl = document.getElementById('message');
+  <script>
+    const form = document.getElementById('emailForm');
+    const messageEl = document.getElementById('message');
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-    const data = {
+      const emailList = form.to.value.split(',').map(e => e.trim()).filter(Boolean);
+      if (emailList.length === 0) {
+        messageEl.textContent = 'Please enter at least one valid email.';
+        return;
+      }
+
+      const data = {
         id: Date.now().toString(),
-        email: form.to.value,
-        to: form.to.value,
+        email: emailList,
         subject: form.subject.value,
         body: form.body.value
-    };
+      };
 
-    messageEl.textContent = 'Sending...';
+      messageEl.textContent = 'Sending...';
 
-    try {
-      const res = await fetch('/send', {  // adjust URL if your backend route differs
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
+      try {
+        const res = await fetch('/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
 
-      if (!res.ok) throw new Error('Failed to send email');
-
-      const result = await res.json();
-      messageEl.textContent = result.message || 'Email sent successfully!';
-      form.reset();
-    } catch (err) {
-      messageEl.textContent = 'Error: ' + err.message;
-    }
-  });
-</script>
+        const result = await res.json();
+        if (res.ok) {
+          messageEl.textContent = 'Sent:\n' + result.results.map(r =>
+            `${r.email}: ${r.status}`).join('\n');
+        } else {
+          messageEl.textContent = 'Error: ' + result.error;
+        }
+      } catch (err) {
+        messageEl.textContent = 'Error: ' + err.message;
+      }
+    });
+  </script>
 </body>
 </html>

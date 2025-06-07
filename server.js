@@ -24,7 +24,7 @@ const emailService = new EmailService([
   new MockFailProvider('Mock')
 ]);
 
-// API endpoint for sending email
+// API endpoint for sending to multiple emails
 app.post('/send', async (req, res) => {
   const { id, email, subject, body } = req.body;
 
@@ -32,13 +32,23 @@ app.post('/send', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  try {
-    await emailService.sendEmail(id, email, subject, body);
-    const status = emailService.getStatus(id);
-    res.json({ id, email, status });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to send email', detail: err.message });
+  const emailList = Array.isArray(email)
+    ? email
+    : email.split(',').map(e => e.trim()).filter(Boolean);
+
+  const results = [];
+
+  for (const addr of emailList) {
+    try {
+      await emailService.sendEmail(`${id}-${addr}`, addr, subject, body);
+      const status = emailService.getStatus(`${id}-${addr}`);
+      results.push({ email: addr, status });
+    } catch (err) {
+      results.push({ email: addr, status: 'FAILED', error: err.message });
+    }
   }
+
+  res.json({ id, results });
 });
 
 // Default route to serve index.html
